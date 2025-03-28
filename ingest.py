@@ -15,6 +15,8 @@ load_dotenv()
 # embeddings = models.embeddings_ollama
 # llm = models.model_ollama
 
+data_folder = "./data"
+chroma_db_folder = "./chroma_db"
 chunk_size = 1000
 chunk_overlap = 50
 check_interval = 10
@@ -24,7 +26,7 @@ check_interval = 10
 vector_store = Chroma (
     collection_name="documents",
     embedding_function=embeddings,
-    persist_directory="./db/chroma_langchain_db",
+    persist_directory=chroma_db_folder,
 )
 
 
@@ -49,3 +51,17 @@ def ingest_file(file_path):
     
     vector_store.add_documents(documents=documents, ids=uuids)
     print("Finished ingesting file: {file_path}")
+
+
+
+# Main loop 
+def main_loop():
+    while True:
+        for filename in os.listdir(data_folder):
+            if not filename.startswith("_"): 
+                file_path = os.path.join(data_folder, filename)
+                ingest_file(file_path)
+                new_filename = "_" + filename
+                new_file_path = os.path.join(data_folder, new_filename)
+                os.rename(file_path, new_file_path)
+            time.sleep(check_interval) # check the folder every 10 seconds
