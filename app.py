@@ -2,15 +2,16 @@ import os
 import streamlit as st
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings import HuggingFaceInstructEmbeddings #, OpenAIEmbeddings
-from langchain.vectorstores import FAISS
+#from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+#from langchain.embeddings import HuggingFaceInstructEmbeddings     #, OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 #from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
-from langchain.llms import HuggingFaceHub
+#from langchain_community.llms import HuggingFaceHub
 from together import Together
 from langchain.llms.base import LLM
 from typing import List, Optional
@@ -29,11 +30,9 @@ def get_pdf_text(pdf_docs):
 
 
 def get_text_chunks(text):
-    text_splitter = CharacterTextSplitter(
-        separator="\n",
-        chunk_size=1000,
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=3000,
         chunk_overlap=200,
-        length_function=len
     )
     chunks = text_splitter.split_text(text)
     return chunks
