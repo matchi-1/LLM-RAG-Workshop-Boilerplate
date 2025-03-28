@@ -1,4 +1,5 @@
 import os
+import time
 import streamlit as st
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
@@ -10,120 +11,61 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 #from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain, LLMChain, StuffDocumentsChain
-from htmlTemplates import css, bot_template, user_template
-#from langchain_community.llms import HuggingFaceHub
 from together import Together
 from langchain.llms.base import LLM
 from typing import List, Optional
 from langchain_chroma import Chroma
 
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.prompts import PromptTemplate
-
-from ingest import ingest_file, vector_store,DATA_FOLDER, CHROMA_PATH   # import the the ingest_file method and vector store from ingest.py
+from ingest import ingest_file, vector_store   # import the the ingest_file method and vector store from ingest.py
 
 load_dotenv()  # load environment variables from .env file
 together_api_key = os.getenv("TOGETHER_LLM_API_KEY") # Together api key: get the API key from the environment variable
 
-
-
-
-
-# # define the retrieval chain
-# retriever = vector_store.as_retriever(kwargs={"k": 10})
-# combine_docs_chain = create_stuff_documents_chain(llm, prompt)
-# retrieval_chain = create_retrieval_chain(retriever, combine_docs_chain)
-
-
-# def get_pdf_text(pdf_docs):
-#     text = ""
-#     for pdf in pdf_docs:
-#         pdf_reader = PdfReader(pdf)
-#         for page in pdf_reader.pages:
-#             text += page.extract_text()
-#     return text
-
-
-# def get_text_chunks(text):
-#     text_splitter = RecursiveCharacterTextSplitter(
-#         chunk_size=3000,
-#         chunk_overlap=200,
-#     )
-#     chunks = text_splitter.split_text(text)
-#     return chunks
-
-
-# def get_vectorstore(text_chunks):
-#     #embeddings = OpenAIEmbeddings()
-#     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-#     vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
-#     return vectorstore
-
-
-
-# Prompt Template with system instructions
-template = """You are James the fun AI assistant that answers the user based on retrieved document context.
-            If the information is not available, do not make up an answer.
-
-            Context:
-            {context}
-
-            Chat History:
-            {chat_history}
-
-            User Query:
-            {query}
-
-            Answer:
-            """
-
-
-prompt = PromptTemplate.from_template(template)
 
 class TogetherLLM(LLM):
     model_name: str = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
     api_key: str
 
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
-        # Define system instructions with context
+        # define system instructions -- acts as the bot's main instructions and personality
         system_instructions = """
-        You are John, the fun AI assistant that answers the user based on retrieved document context.
+        You are James, the fun AI assistant that answers the user based on retrieved document context.
         If the information is not available, do not make up an answer. Instead, say 'I don't know based on the given documents.'
-        """
+        """ # you can make this longer and more specific to your use case
 
-        template = """
-        Context:
-        {context}
-
-        Chat History:
-        {chat_history}
-
-        User Query:
-        {query}
-
-        Answer:
-        """
-
-        # Retrieve chat history from memory
+        # retrieve chat history from memory
         chat_history = "\n".join(
             [f"{m.content}" for m in st.session_state.chat_history]
         ) if st.session_state.chat_history else "No previous conversation."
 
-        # Replace placeholders in the template
+
+        template = """
+        Answer it based on this context:
+        {context}
+
+        This is the chat History:
+        {chat_history}
+
+        This is the current user query:
+        {query}
+
+        Answer:
+        """     # you can also modify this template to change the bot's response style for answering individual queries
+
+        # replace placeholders in the template
         full_prompt = template.format(
-            context="No relevant context found yet.",  # This will be replaced later
+            context="No relevant context found yet.",  # this will be replaced later
             chat_history=chat_history,
             query=prompt
         )
 
-        # Call Together AI's model
+        # call Together AI's model
         client = Together(api_key=self.api_key)
         response = client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "system", "content": system_instructions},
                       {"role": "user", "content": full_prompt}],
-            max_tokens=1000  # Adjust token limit as needed
+            max_tokens=1000  # adjust token limit as needed
         )
 
         return response.choices[0].message.content
@@ -143,45 +85,66 @@ def get_conversation_chain(vectorstore):
         llm=together_llm,
         retriever=vectorstore.as_retriever(),
         memory=memory,
+        # combine_docs_chain=combine_docs_chain
     )
 
     return conversation_chain
 
 
 def handle_userinput(user_question):
+    """Handles user input, gets a response from the chatbot, and updates chat history."""
+
+    # display user message in chat message container
+    with st.chat_message("user"):
+        st.markdown(user_question)
+
+    # add user message to chat history
+    st.session_state.messages.append({"role": "user", "content": user_question})
+
+    # get chatbot response from the conversation chain
     response = st.session_state.conversation.invoke({"question": user_question})
+    bot_reply = response["answer"] 
     st.session_state.chat_history = response["chat_history"]
 
-    for i, message in enumerate(st.session_state.chat_history):
-        if i % 2 == 0:
-            st.write(f"**User:** {message.content}")
-        else:
-            st.write(f"**Bot:** {message.content}")
+    # stream bot's response dynamically
+    with st.chat_message("assistant"):
+        bot_container = st.empty()
+        full_response = ""
+        for word in bot_reply.split():
+            full_response += word + " "
+            bot_container.markdown(full_response)
+            time.sleep(0.05)  # Simulate streaming delay
+
+    # add bot response to chat history
+    st.session_state.messages.append({"role": "assistant", "content": full_response})
 
 
 def main():
     load_dotenv()
-    st.set_page_config(page_title="Chat with multiple PDFs",
-                       page_icon=":books:")
-    st.write(css, unsafe_allow_html=True)
+    st.set_page_config(page_title="Chatbot Title", page_icon="📚") # name of chatbot
 
+    # initialize session state variables
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
+    if "messages" not in st.session_state:
+        st.session_state.messages = []  # store chat messages for UI
 
-    st.header("Chat with multiple PDFs :books:")
+    st.header("💬 Chat with multiple PDFs 📚")
 
-    user_question = st.text_input("Ask a question about your documents:")
-    print(f">>>>>>>>>>>>>>>>>>>>>> user_query: {user_question}")
-    if user_question:
+    # display chat history (persists across reruns)
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # chat input field
+    if user_question := st.chat_input("Ask a question about your documents..."):
         handle_userinput(user_question)
 
-
     with st.sidebar:
-        st.subheader("Your documents")
-        pdf_docs = st.file_uploader(
-            "Upload your PDFs here and click on 'Process'", accept_multiple_files=True)
+        st.subheader("📄 Your Documents")
+        pdf_docs = st.file_uploader("Upload PDFs and click 'Process'", accept_multiple_files=True)
         
         if st.button("Process"):
             with st.spinner("Processing..."):
@@ -193,12 +156,11 @@ def main():
                     # process the PDF and add to Chroma
                     ingest_file(file_path)
 
-    # load the stored vector database
+    # load vector store
     vectorstore = vector_store  # directly use Chroma from ingest.py
 
     # store conversation chain
     st.session_state.conversation = get_conversation_chain(vectorstore)
-
 
 if __name__ == '__main__':
     main()

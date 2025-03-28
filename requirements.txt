@@ -3,15 +3,19 @@ PyPDF2
 python-dotenv
 streamlit
 openai
-faiss-cpu
+faiss-cpu  #
 altair
 tiktoken
 langchain-community
 together 
+chromadb
+langchain-huggingface
+langchain-chroma
+pypdf
 
 #  huggingface llms
-huggingface-hub
+huggingface-hub  #
 
-# instructor embeddings
-InstructorEmbedding
-sentence-transformers
+# instructor embeddings 
+InstructorEmbedding  #
+sentence-transformers  #
