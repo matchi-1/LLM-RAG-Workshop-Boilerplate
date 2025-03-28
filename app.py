@@ -30,7 +30,11 @@ class TogetherLLM(LLM):
         # define system instructions -- acts as the bot's main instructions and personality
         system_instructions = """
         You are James, the fun AI assistant that answers the user based on retrieved document context.
-        If the information is not available, do not make up an answer. Instead, say 'I don't know based on the given documents.'
+        You should always be enthusiastic and helpful when replying.
+        
+        If the question is general knowledge and isn't necessarily related to the context, try and answer it still based on facts.
+        If you are unsure of the answer, just say 'I don't know based on the given documents.'
+        
         """ # you can make this longer and more specific to your use case
 
         # retrieve chat history from memory
@@ -141,6 +145,18 @@ def delete_pdf(filename):
         os.remove(file_path)
         st.success(f"Deleted {filename}")
 
+def get_unique_filename(directory, filename):
+    """Generate a unique filename by adding a numeric suffix if needed."""
+    base, ext = os.path.splitext(filename)  # split name and extension
+    counter = 1
+    new_filename = filename
+
+    while os.path.exists(os.path.join(directory, new_filename)):
+        new_filename = f"{base} ({counter}){ext}"
+        counter += 1
+
+    return new_filename
+
 def main():
     load_dotenv()
     st.set_page_config(page_title="BOTTIE", page_icon="👒")  # Chatbot name
@@ -170,18 +186,46 @@ def main():
         # Upload new PDFs
         pdf_docs = st.file_uploader("Upload PDFs and click 'Process'", accept_multiple_files=True)
         
+        # logic to process uploaded PDFs
         if st.button("Process"):
-            with st.spinner("Processing..."):
+            if not pdf_docs:
+                st.warning("⚠️ No files uploaded. Please select at least one PDF.")
+                time.sleep(2)  # Allow warning to persist
+            else:
+                existing_files = {pdf["filename"].lstrip("_") for pdf in list_pdfs()}  # Get base filenames
+                valid_files = []  # Store valid PDFs for processing
+
                 for pdf in pdf_docs:
-                    file_path = os.path.join(DATA_DIR, pdf.name)
-                    with open(file_path, "wb") as f:
-                        f.write(pdf.read())
-                    
-                    # Process the PDF and add to Chroma
-                    ingest_file(file_path)
+                    base_name = pdf.name.lstrip("_")
+                    if base_name in existing_files:
+                        st.error(f"❌ File '{pdf.name}' already exists. Please rename or upload a different file.")
+                        time.sleep(2)
+                    elif not pdf.name.endswith(".pdf"):
+                        st.error(f"❌ Invalid file format: '{pdf.name}'. Only PDFs are allowed.")
+                        time.sleep(2)
+                    else:
+                        valid_files.append(pdf)
+
+                if valid_files:  # Process only valid PDFs
+                    with st.spinner("Processing..."):
+                        for pdf in valid_files:
+                            file_path = os.path.join(DATA_DIR, pdf.name)
+                            try:
+                                with open(file_path, "wb") as f:
+                                    f.write(pdf.read())
+
+                                # Process the PDF and add to Chroma
+                                ingest_file(file_path)
+                                st.success(f"✅ Successfully processed: {pdf.name}")
+                            except Exception as e:
+                                st.error(f"⚠️ Error processing '{pdf.name}': {e}")
+                                time.sleep(2)
+
+                    time.sleep(2)  # Allow success messages to persist
+                    st.rerun()  # Refresh UI
 
         # Display stored PDFs in a table
-        st.subheader("📋 Uploaded PDFs")
+        st.subheader("📋 Processed PDFs")
         pdf_list = list_pdfs()
         
         if pdf_list:
