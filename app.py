@@ -16,6 +16,8 @@ from together import Together
 from langchain.llms.base import LLM
 from typing import List, Optional
 
+from ingest import ingest_file, vector_store    # import the the ingest_file method and vector store from ingest.py
+
 load_dotenv() 
 
 together_api_key = os.getenv("TOGETHER_LLM_API_KEY")
@@ -109,20 +111,22 @@ def main():
         st.subheader("Your documents")
         pdf_docs = st.file_uploader(
             "Upload your PDFs here and click on 'Process'", accept_multiple_files=True)
+        
         if st.button("Process"):
-            with st.spinner("Processing"):
-                # get pdf text
-                raw_text = get_pdf_text(pdf_docs)
+            with st.spinner("Processing..."):
+                for pdf in pdf_docs:
+                    file_path = os.path.join("./data", pdf.name)
+                    with open(file_path, "wb") as f:
+                        f.write(pdf.read())
+                    
+                    # process the PDF and add to Chroma
+                    ingest_file(file_path)
 
-                # get the text chunks
-                text_chunks = get_text_chunks(raw_text)
+                # load the stored vector database
+                vectorstore = vector_store  # directly use Chroma from ingest.py
 
-                # create vector store
-                vectorstore = get_vectorstore(text_chunks)
-
-                # create conversation chain
-                st.session_state.conversation = get_conversation_chain(
-                    vectorstore)
+                # store conversation chain
+                st.session_state.conversation = get_conversation_chain(vectorstore)
 
 
 if __name__ == '__main__':

@@ -1,68 +1,58 @@
-
 import os
-import time
-from dotenv import load_dotenv
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma
-from uuid import uuid4
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+DATA_FOLDER = "./data"
+CHROMA_PATH = "./chroma_db"
 
-load_dotenv()
+def ingest_file(pdf_path):
+    """Ingest a PDF file into ChromaDB"""
+    
+    # load PDF
+    loader = PyPDFLoader(pdf_path)
+    pages = loader.load()
 
-# Initialize the models
-# models = Models()
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-# llm = models.model_ollama
-
-data_folder = "./data"
-chroma_db_folder = "./chroma_db"
-chunk_size = 1000
-chunk_overlap = 50
-check_interval = 10
-
-
-# chroma vector store
-vector_store = Chroma (
-    collection_name="documents",
-    embedding_function=embeddings,
-    persist_directory=chroma_db_folder,
-)
-
-
-# ingest a file
-def ingest_file(file_path):
-    # skip non-PDF files
-    if not file_path.lower().endswith('.pdf'): 
-        print (f"Skipping non-PDF file: {file_path}")
+    if not pages:
+        print(f">>>>>>> ERROR: No text found in {pdf_path}")
         return
 
-    print(f"Starting to ingest file: {file_path}")
-    loader = PyPDFLoader (file_path)
-    loaded_documents = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap,
-        separators=["\n", " ", ""])
-    
-    documents = text_splitter.split_documents(loaded_documents)
-    uuids = [str(uuid4()) for _ in range(len(documents))]
-    print(f"Adding {len (documents)} documents to the vector store")
-    
-    vector_store.add_documents(documents=documents, ids=uuids)
-    print("Finished ingesting file: {file_path}")
+    # print extracted content for debugging
+    print(f"========= Extracted {len(pages)} pages from {pdf_path}")
+    print(f"========= First Page Sample:\n{pages[0].page_content[:500]}")  # Print first 500 chars
 
+    # split text
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+    docs = text_splitter.split_documents(pages)
 
+    if not docs:
+        print(f">>>>>>> ERROR: No text chunks created for {pdf_path}")
+        return
 
-# Main loop 
-def main_loop():
-    while True:
-        for filename in os.listdir(data_folder):
-            if not filename.startswith("_"): 
-                file_path = os.path.join(data_folder, filename)
-                ingest_file(file_path)
-                new_filename = "_" + filename
-                new_file_path = os.path.join(data_folder, new_filename)
-                os.rename(file_path, new_file_path)
-            time.sleep(check_interval) # check the folder every 10 seconds
+    # print chunk info
+    print(f"========= {len(docs)} chunks created for {pdf_path}")
+
+    # set up embeddings
+    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+
+    # connect to Chroma
+    vector_store = Chroma(collection_name = "documents",
+                        persist_directory=CHROMA_PATH,
+                        embedding_function=embeddings)
+
+    # add documents
+    vector_store.add_documents(docs)
+
+    # rename file to mark as processed
+    os.rename(pdf_path, os.path.join(DATA_FOLDER, "_" + os.path.basename(pdf_path)))
+
+    print(f"\n\n========= {pdf_path} successfully ingested and stored!")
+
+if __name__ == "__main__":
+    if not os.path.exists(DATA_FOLDER):
+        os.makedirs(DATA_FOLDER)
+
+    for file in os.listdir(DATA_FOLDER):
+        if file.endswith(".pdf") and not file.startswith("_"):
+            ingest_file(os.path.join(DATA_FOLDER, file))

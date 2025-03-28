@@ -1,9 +1,9 @@
-from huggingface_hub import InferenceClient
+from langchain_chroma import Chroma
+from langchain_huggingface import HuggingFaceEmbeddings
 
-hf_token = "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"
-model_name = "mistralai/Mistral-Nemo-Instruct-2407"  # Ensure this is public or you have permission
+CHROMA_PATH = "./chroma_db"
+embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
-client = InferenceClient(api_key=hf_token)
-response = client.text_generation("Test input", max_new_tokens=50)
+vector_store = Chroma(persist_directory=CHROMA_PATH, embedding_function=embeddings)
 
-print(response)
+print(f"Documents stored: {vector_store._collection.count()}")
