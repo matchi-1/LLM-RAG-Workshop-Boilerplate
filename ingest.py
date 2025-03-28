@@ -6,13 +6,14 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma
 from uuid import uuid4
+from langchain_community.embeddings import HuggingFaceEmbeddings
 
 
 load_dotenv()
 
 # Initialize the models
 # models = Models()
-# embeddings = models.embeddings_ollama
+embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 # llm = models.model_ollama
 
 data_folder = "./data"
