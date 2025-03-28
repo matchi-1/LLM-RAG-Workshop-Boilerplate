@@ -12,6 +12,7 @@ chromadb
 langchain-huggingface
 langchain-chroma
 pypdf
+keyboard
 
 #  huggingface llms
 huggingface-hub  #
