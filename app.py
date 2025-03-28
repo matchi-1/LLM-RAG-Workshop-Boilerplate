@@ -102,6 +102,11 @@ def get_conversation_chain(vectorstore):
 
     return conversation_chain
 
+# helper function to stream text output
+def stream_data(text):
+    for word in text.split(" "):
+        yield word + " "
+        time.sleep(0.05)
 
 def handle_userinput(user_question):
     """Handles user input, gets a response from the chatbot, and updates chat history."""
@@ -115,20 +120,15 @@ def handle_userinput(user_question):
 
     # get chatbot response from the conversation chain
     response = st.session_state.conversation.invoke({"question": user_question})
-    bot_reply = response["answer"] 
+    bot_reply = response["answer"]
     st.session_state.chat_history = response["chat_history"]
 
-    # stream bot's response dynamically
+    # display bot's response in markdown
     with st.chat_message("assistant"):
-        bot_container = st.empty()
-        full_response = ""
-        for word in bot_reply.split():
-            full_response += word + " "
-            bot_container.markdown(full_response)
-            time.sleep(0.05)  # simulate streaming delay
+        st.write_stream(stream_data(bot_reply))
 
     # add bot response to chat history
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+    st.session_state.messages.append({"role": "assistant", "content": bot_reply})
 
 
 DATA_FOLDER = "./data"
@@ -152,7 +152,7 @@ def delete_pdf(filename):
     file_path = os.path.join(DATA_FOLDER, filename)
 
     if os.path.exists(file_path):
-        os.remove(file_path)  # Remove file
+        os.remove(file_path)  # remove file
         st.success(f"✅ Deleted: {filename}")
         st.warning(
             "⚠️ A file was deleted, but its data is still in ChromaDB."
@@ -184,7 +184,7 @@ def main():
         handle_userinput(user_question)
 
     with st.sidebar:
-        st.subheader("📄 Retrieval Augmented Generation (RAG)")
+        st.header("📄 Retrieval Augmented Generation (RAG)")
         
         # upload new PDFs
         pdf_docs = st.file_uploader("Upload PDFs and click 'Process'", accept_multiple_files=True)
@@ -226,9 +226,10 @@ def main():
 
                     time.sleep(2)  # allow success messages to persist
                     st.rerun()  # refresh UI
-
+       
+        st.divider()
         # display stored PDFs in a table
-        st.subheader("📋 Processed PDFs")
+        st.subheader("📋 Processed PDFs in ChromaDB")
         pdf_list = list_pdfs()
         
         if pdf_list:
@@ -237,11 +238,30 @@ def main():
 
                 col1.write(f"{pdf['name']}")  # processed status and PDF name
                 
-                # Delete button
+                # Delete button with confirmation
                 if col2.button("🗑️", key=pdf["filename"]):
-                    delete_pdf(pdf["filename"])
-                    st.session_state["chroma_reset_needed"] = True
-                    st.rerun()  # refresh the UI after deletion
+                    st.warning(f"Are you sure you want to delete **{pdf['filename']}**?")
+                    
+                    # Show confirmation buttons
+                    col_confirm, col_cancel = st.columns([1, 1])
+                    
+                    with col_confirm:
+                        if st.button("✅ Yes, Delete", key=f"confirm_{pdf['filename']}"):
+                            delete_pdf(pdf["filename"])
+                            st.session_state["chroma_reset_needed"] = True
+                            st.rerun()  # refresh the UI after deletion
+
+                    with col_cancel:
+                        if st.button("❌ Cancel", key=f"cancel_{pdf['filename']}"):
+                            st.experimental_rerun()  # Just refresh the UI without deleting
+        st.divider()
+        st.markdown(
+            '<p style="font-size: 12px; color: grey;">'
+            'Note: If you deleted a file here and have not reset ChromaDB yet, the embeddings still exist but are not visible in the list.'
+            '</p>',
+            unsafe_allow_html=True
+        )
+
 
     # initialize embeddings
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
@@ -253,6 +273,7 @@ def main():
 
     # store conversation chain
     st.session_state.conversation = get_conversation_chain(vectorstore)
+
 
     # show warning and reset button if a file has been deleted
     if st.session_state.get("chroma_reset_needed", False):
@@ -271,9 +292,9 @@ def main():
         if st.button("❌ Exit Streamlit App"):
             st.write("🔄 Exiting... Please delete 'chroma_db' folder and restart the app.")
             time.sleep(4)
-            # Close streamlit browser tab
+            # close streamlit browser tab
             keyboard.press_and_release('ctrl+w')
-            # Terminate streamlit python process
+            # terminate streamlit python process
             pid = os.getpid()
             p = psutil.Process(pid)
             p.terminate()
