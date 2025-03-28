@@ -7,6 +7,14 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 DATA_FOLDER = "./data"
 CHROMA_PATH = "./chroma_db"
 
+# set up embeddings
+embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+
+# initialize a Chromadb vector store
+vector_store = Chroma(collection_name = "documents",
+                    persist_directory=CHROMA_PATH,
+                    embedding_function=embeddings)
+
 def ingest_file(pdf_path):
     """Ingest a PDF file into ChromaDB"""
     
@@ -33,14 +41,6 @@ def ingest_file(pdf_path):
     # print chunk info
     print(f"========= {len(docs)} chunks created for {pdf_path}")
 
-    # set up embeddings
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-
-    # connect to Chroma
-    vector_store = Chroma(collection_name = "documents",
-                        persist_directory=CHROMA_PATH,
-                        embedding_function=embeddings)
-
     # add documents
     vector_store.add_documents(docs)
 
@@ -48,6 +48,8 @@ def ingest_file(pdf_path):
     os.rename(pdf_path, os.path.join(DATA_FOLDER, "_" + os.path.basename(pdf_path)))
 
     print(f"\n\n========= {pdf_path} successfully ingested and stored!")
+
+
 
 if __name__ == "__main__":
     if not os.path.exists(DATA_FOLDER):
