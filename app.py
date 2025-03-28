@@ -119,47 +119,86 @@ def handle_userinput(user_question):
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
 
+DATA_DIR = "./data"
+
+def list_pdfs():
+    """Lists all PDFs in the data folder with their processed status."""
+    pdfs = []
+    if not os.path.exists(DATA_DIR):
+        os.makedirs(DATA_DIR)  # Ensure data directory exists
+    
+    for filename in os.listdir(DATA_DIR):
+        if filename.endswith(".pdf"):
+            is_processed = filename.startswith("_")  # Processed if prefixed with "_"
+            display_name = filename.lstrip("_")  # Remove "_" prefix for UI display
+            pdfs.append({"name": display_name, "processed": is_processed, "filename": filename})
+    return pdfs
+
+def delete_pdf(filename):
+    """Deletes a PDF from the data folder."""
+    file_path = os.path.join(DATA_DIR, filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        st.success(f"Deleted {filename}")
+
 def main():
     load_dotenv()
-    st.set_page_config(page_title="Chatbot Title", page_icon="📚") # name of chatbot
+    st.set_page_config(page_title="BOTTIE", page_icon="👒")  # Chatbot name
 
-    # initialize session state variables
+    # Initialize session state variables
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
     if "messages" not in st.session_state:
-        st.session_state.messages = []  # store chat messages for UI
+        st.session_state.messages = []  # Store chat messages for UI
 
-    st.header("💬 Chat with multiple PDFs 📚")
+    st.header("Ask BOTTIE a question 👒")
 
-    # display chat history (persists across reruns)
+    # Display chat history (persists across reruns)
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # chat input field
+    # Chat input field
     if user_question := st.chat_input("Ask a question about your documents..."):
         handle_userinput(user_question)
 
     with st.sidebar:
         st.subheader("📄 Your Documents")
+        
+        # Upload new PDFs
         pdf_docs = st.file_uploader("Upload PDFs and click 'Process'", accept_multiple_files=True)
         
         if st.button("Process"):
             with st.spinner("Processing..."):
                 for pdf in pdf_docs:
-                    file_path = os.path.join("./data", pdf.name)
+                    file_path = os.path.join(DATA_DIR, pdf.name)
                     with open(file_path, "wb") as f:
                         f.write(pdf.read())
                     
-                    # process the PDF and add to Chroma
+                    # Process the PDF and add to Chroma
                     ingest_file(file_path)
 
-    # load vector store
-    vectorstore = vector_store  # directly use Chroma from ingest.py
+        # Display stored PDFs in a table
+        st.subheader("📋 Uploaded PDFs")
+        pdf_list = list_pdfs()
+        
+        if pdf_list:
+            for pdf in pdf_list:
+                col1, col2 = st.columns([3, 1])  # Table columns
 
-    # store conversation chain
+                col1.write(f"{pdf['name']}")  # processed status and PDF name
+                
+                # Delete button
+                if col2.button("🗑️", key=pdf["filename"]):
+                    delete_pdf(pdf["filename"])
+                    st.rerun()  # Refresh the UI after deletion
+
+    # Load vector store
+    vectorstore = vector_store  # Directly use Chroma from ingest.py
+
+    # Store conversation chain
     st.session_state.conversation = get_conversation_chain(vectorstore)
 
 if __name__ == '__main__':
