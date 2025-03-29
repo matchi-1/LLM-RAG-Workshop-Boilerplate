@@ -2,6 +2,7 @@ import streamlit as st
 
 def apply_ui_customization():
     """Applies custom UI styles for the Streamlit app."""
+    
     custom_css = """
     <style>
         /* Customize sidebar */
@@ -12,7 +13,7 @@ def apply_ui_customization():
 
         /* Style main content area */
         [data-testid="stAppViewContainer"] {
-            background-color: #f7f7f7;    /* whitish */
+            background-color: #f7f7f7;    /* whitish background */
         }
 
         /* Style headers */
@@ -25,25 +26,38 @@ def apply_ui_customization():
 
         /* Customize chat messages */
         [data-testid="stChatMessage"] {
-            background-color: #e3f2fd !important;
+            background-color: #9edbde !important;
             padding: 10px;
             border-radius: 10px;
+            color: black !important;
         }
 
-        /* Change input box appearance */
-        [data-baseweb="textarea"] {
-            font-size: 16px !important;
-            padding: 10px !important;
-            border: 2px solid #0b7875 !important;
-            border-radius: 8px !important;
+        
+        /* Alternate background colors */
+        [data-testid="stChatMessage"]:nth-child(odd) {
+            background-color: #9edbde !important; /* Light blue for user */
         }
 
-        /* Style columns */
-        [data-testid="column"] {
-            box-shadow: rgb(0 0 0 / 20%) 0px 2px 1px -1px, rgb(0 0 0 / 14%) 0px 1px 1px 0px, rgb(0 0 0 / 12%) 0px 1px 3px 0px;
-            border-radius: 15px;
-            padding: 5% 5% 5% 10%;
+        [data-testid="stChatMessage"]:nth-child(even) {
+            background-color: #f8d7da !important; /* Light red for bot */
         }
+
+        
+        [data-testid="stChatMessageContent"] {
+            color: black !important;
+        }
+
+        [data-testid="stChatMessageAvatarUser"] {
+            color: black !important;
+            background-color: #00b7db !important;00aeb8
+        }
+
+        [data-testid="stChatMessageAvatarAssistant"] {
+            color: black !important;
+            background-color: #f2b600 !important;
+        }
+
+        
     </style>
     """
     st.markdown(custom_css, unsafe_allow_html=True)
