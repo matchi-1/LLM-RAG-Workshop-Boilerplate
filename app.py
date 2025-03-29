@@ -12,7 +12,7 @@ from langchain_community.vectorstores import FAISS
 #from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain 
-from langchain.llms.base import LLM
+#from langchain.llms.base import LLM
 from langchain_chroma import Chroma
 
 from ingest import ingest_file, DATA_FOLDER, CHROMA_PATH, TogetherEmbeddings   #   vector_store,    import the the ingest_file method and vector store from ingest.py

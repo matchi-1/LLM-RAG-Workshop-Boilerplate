@@ -58,13 +58,13 @@ class TogetherLLM(LLM):
 
 
         template = """
-        Answer it based on this context:
+        Context:
         {context}
 
-        This is the chat History:
+        Chat History:
         {chat_history}
 
-        This is the current user query:
+        User input:
         {query}
 
         Answer:

@@ -21,4 +21,4 @@ psutil
 
 # instructor embeddings 
 #InstructorEmbedding  #
-#sentence-transformers  #
+# sentence-transformers  #
