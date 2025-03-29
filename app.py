@@ -144,13 +144,14 @@ def main():
                                     f.write(pdf.read())
 
                                 # process the PDF and add to Chroma
-                                ingest_file(file_path)
+                                total_time = ingest_file(file_path)
                                 st.success(f"✅ Successfully processed: {pdf.name}")
+                                st.info(f"⌛ Total time taken: {total_time:.2f} seconds")
                             except Exception as e:
                                 st.error(f"⚠️ Error processing '{pdf.name}': {e}")
                                 time.sleep(2)
 
-                    time.sleep(2)  # allow success messages to persist
+                    time.sleep(3)  # allow success messages to persist
                     st.rerun()  # refresh UI
 
                 else:

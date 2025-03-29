@@ -1,4 +1,5 @@
 import os
+import time
 #from langchain_huggingface import HuggingFaceEmbeddings # uncomment to use huggingface
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFLoader
@@ -58,6 +59,10 @@ def ingest_file(pdf_path):
     print(f"========= Extracted {len(pages)} pages from {pdf_path}")
     #print(f"========= First Page Sample:\n{pages[0].page_content[:500]}")  # Print first 500 chars
 
+    # record start time
+    start_time = time.time()
+    print(f"Process started at: {time.ctime(start_time)}")
+
     # split text
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
     docs = text_splitter.split_documents(pages)
@@ -76,6 +81,16 @@ def ingest_file(pdf_path):
     os.rename(pdf_path, os.path.join(DATA_FOLDER, "_" + os.path.basename(pdf_path)))
 
     print(f"\n\nYIPEEEEEEEE {pdf_path} successfully ingested and stored!")
+
+    # Record end time
+    end_time = time.time()
+    print(f"Process ended at: {time.ctime(end_time)}")
+
+    # Print the total time taken
+    total_time = end_time - start_time
+    print(f"Total time taken: {total_time:.2f} seconds")
+
+    return total_time
 
 
 
