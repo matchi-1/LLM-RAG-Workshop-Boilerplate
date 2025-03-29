@@ -13,7 +13,7 @@ def apply_ui_customization():
 
         /* Style main content area */
         [data-testid="stAppViewContainer"] {
-            background-color: #f7f7f7;    /* whitish background */
+            background-color: white;    /* whitish background */
         }
 
         /* Style headers */
@@ -57,6 +57,15 @@ def apply_ui_customization():
             color: #5ca0a3 !important;
             background-color: #edebeb !important;
         }
+
+        [data-testid="stHorizontalBlock"] {
+            color: #bdd6d9 !important;
+        }
+
+        [data-testid="stWidgetLabel"] {
+            color: #bdd6d9 !important;
+        }
+
 
         
     </style>

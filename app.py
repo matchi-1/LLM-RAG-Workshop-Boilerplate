@@ -200,7 +200,7 @@ def main():
         
         st.divider()
         st.markdown(
-            '<p style="font-size: 0.75rem; color: #005a5e; text-align: justify;">'
+            '<p style="font-size: 0.75rem; color: #7DA0A0; text-align: justify;">'
             'Note: If you deleted a file here and have not reset ChromaDB yet, the embeddings still exist but are not visible in the list. Terminate the streamlit app and delete the "./chroma_db" folder to reset, then you can  run the app again.'
             '</p>',
             unsafe_allow_html=True
