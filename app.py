@@ -93,10 +93,10 @@ def main():
     # initialize chat history if not already set
     if "messages" not in st.session_state:
         st.session_state.messages = [
-            {"role": "assistant", "content": "👋 Hello! How can I assist you today?"}
+            {"role": "assistant", "content": "💊 Hello! How can I assist you today?"}
         ]
 
-    st.header("ChatTGP 👩🏼‍⚕️")
+    st.header("ChatTGP 💊")
 
     # Apply UI customization
     apply_ui_customization()
@@ -111,7 +111,7 @@ def main():
         handle_userinput(user_question)
 
     with st.sidebar:
-        st.header("📄 Retrieval Augmented Generation (RAG)")
+        st.subheader("📄 Retrieval Augmented Generation (RAG)")
         
         # upload new PDFs
         pdf_docs = st.file_uploader("Upload PDFs and click 'Process'", accept_multiple_files=True)
@@ -200,7 +200,7 @@ def main():
         
         st.divider()
         st.markdown(
-            '<p style="font-size: 0.75rem; color: #7DA0A0; text-align: justify;">'
+            '<p style="font-size: 0.75rem; color: #0f565c; text-align: justify;">'
             'Note: If you deleted a file here and have not reset ChromaDB yet, the embeddings still exist but are not visible in the list. Terminate the streamlit app and delete the "./chroma_db" folder to reset, then you can  run the app again.'
             '</p>',
             unsafe_allow_html=True
