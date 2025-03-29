@@ -5,7 +5,7 @@ def apply_ui_customization():
     
     custom_css = """
     <style>
-        /* Customize sidebar */
+    
         [data-testid="stSidebar"] {
             background-color: #038691 !important;   /* SIDEBAR -- dark blue teal */
             padding: 1rem;
