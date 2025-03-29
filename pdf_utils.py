@@ -25,7 +25,7 @@ def delete_pdf(filename):
     if os.path.exists(file_path):
         os.remove(file_path)  # remove file
         st.success(f"✅ Deleted: {filename}")
-        st.warning(
+        st.info(
             "⚠️ A file was deleted, but its data is still in ChromaDB."
         )
         time.sleep(3) 

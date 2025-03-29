@@ -84,6 +84,10 @@ def apply_ui_customization():
             color: #b0faff !important;              /* INFO FONT   --  light blue*/ 
         }
 
+        [data-testid="stAlertContentSuccess"] {
+            color: #d4fae3 !important;              /* SUCCESS FONT   --  light green*/ 
+        }
+
         [data-testid="stBaseButton-secondary"] {
             color: #0299a6 !important;              /* BUTTON FONT   --  teal*/ 
         }

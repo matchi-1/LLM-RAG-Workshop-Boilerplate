@@ -178,9 +178,10 @@ def main():
                     # toggle the confirmation state
                     st.session_state[delete_confirm_key] = not st.session_state[delete_confirm_key]
 
+                is_delete = False
                 # handle deletion confirmation and cancellation
                 if st.session_state[delete_confirm_key]:
-                    st.warning(f"Are you sure you want to delete **{pdf['filename']}**?")
+                    st.info(f"Are you sure you want to delete **{pdf['filename']}**?")
 
                     col_confirm, col_cancel = st.columns([1, 1])
 
@@ -195,7 +196,7 @@ def main():
                         if st.button("❌ Cancel", key=f"cancel_{pdf['filename']}"):
                             st.session_state[delete_confirm_key] = False  # reset confirmation state
                             st.rerun() 
-
+                    
         
         st.divider()
         st.markdown(
