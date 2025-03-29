@@ -81,7 +81,9 @@ def handle_userinput(user_question):
 def main():
     load_dotenv()
     st.set_page_config(page_title="ChatTGP", page_icon="💊")  # chatbot name
-
+    st.warning(
+            "⚠️ A file was deleted, but its data is still in ChromaDB."
+        )
     # initialize session state variables
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
@@ -119,7 +121,7 @@ def main():
         # logic to process uploaded PDFs
         if st.button("Process"):
             if not pdf_docs:
-                st.warning("⚠️ No files uploaded. Please select at least one PDF.")
+                st.info("⚠️ No files uploaded. Please select at least one PDF.")
                 time.sleep(2)  # allow warning to persist
             else:
                 existing_files = {pdf["filename"].lstrip("_") for pdf in list_pdfs()}  # get base filenames

@@ -22,7 +22,7 @@ def apply_ui_customization():
         }
 
         [data-testid="stMarkdownContainer"] h2{
-            font-family: 'Arial', sans-serif !important;     /* HEADERS -- white */
+            font-family: 'Arial', sans-serif !important;     /* HEADERS -- teal */
             color: #0299a6 !important;
         }
 
@@ -68,8 +68,24 @@ def apply_ui_customization():
             color: #bdd6d9 !important;              /* PDF UPLOADS FONT  --  light grey teal */ 
         }
 
+        [data-testid="stFileUploaderFile"] {
+            color: white !important;              /* PDF UPLOADED FILES FONT  --  light grey teal */ 
+        }
+
         [data-testid="stWidgetLabel"] {
             color: #bdd6d9 !important;              /* CAPTION FONT FOR UPLOAD   --  light grey teal*/ 
+        }
+
+        [data-testid="stAlertContentWarning"] {
+            color: #996600 !important;              /* ALERT FONT  --  white*/ 
+        }
+
+        [data-testid="stAlertContentInfo"] {
+            color: #b0faff !important;              /* INFO FONT   --  light blue*/ 
+        }
+
+        [data-testid="stBaseButton-secondary"] {
+            color: #0299a6 !important;              /* BUTTON FONT   --  teal*/ 
         }
 
     </style>
