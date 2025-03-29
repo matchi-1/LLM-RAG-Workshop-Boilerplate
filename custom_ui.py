@@ -35,26 +35,27 @@ def apply_ui_customization():
         
         /* Alternate background colors */
         [data-testid="stChatMessage"]:nth-child(odd) {
-            background-color: #9edbde !important; /* Light blue for user */
+            background-color: #edebeb !important; /* bot color */
         }
 
         [data-testid="stChatMessage"]:nth-child(even) {
-            background-color: #f8d7da !important; /* Light red for bot */
+            background: linear-gradient(to right, #54d0d6, #5ca0a3)
         }
 
-        
+
         [data-testid="stChatMessageContent"] {
-            color: black !important;
+            color: #004347 !important;
+            padding-left: 0.5rem;
         }
 
         [data-testid="stChatMessageAvatarUser"] {
-            color: black !important;
-            background-color: #00b7db !important;00aeb8
+            color: #1fb7bf !important;
+            background-color: #e8f9fa !important;
         }
 
         [data-testid="stChatMessageAvatarAssistant"] {
-            color: black !important;
-            background-color: #f2b600 !important;
+            color: #5ca0a3 !important;
+            background-color: #edebeb !important;
         }
 
         
