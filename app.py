@@ -19,7 +19,7 @@ from typing import List, Optional
 from langchain_chroma import Chroma
 
 from ingest import ingest_file, DATA_FOLDER, CHROMA_PATH, TogetherEmbeddings   #   vector_store,    import the the ingest_file method and vector store from ingest.py
-import shutil
+from pdf_utils import list_pdfs, delete_pdf
 
 
 load_dotenv()  # load environment variables from .env file
@@ -129,35 +129,6 @@ def handle_userinput(user_question):
     st.session_state.messages.append({"role": "assistant", "content": bot_reply})
 
 
-DATA_FOLDER = "./data"
-
-def list_pdfs():
-    """Lists all PDFs in the data folder with their processed status."""
-    pdfs = []
-    if not os.path.exists(DATA_FOLDER):
-        os.makedirs(DATA_FOLDER)  # ensure data directory exists
-    
-    for filename in os.listdir(DATA_FOLDER):
-        if filename.endswith(".pdf"):
-            is_processed = filename.startswith("_")  # processed if prefixed with "_"
-            display_name = filename.lstrip("_")  # remove "_" prefix for UI display
-            pdfs.append({"name": display_name, "processed": is_processed, "filename": filename})
-    return pdfs
-
-
-def delete_pdf(filename):
-    """Deletes a PDF file, resets ChromaDB, and reprocesses remaining PDFs."""
-    file_path = os.path.join(DATA_FOLDER, filename)
-
-    print(f"!!!!!!!!!!!!!!!!! Attempting to delete: {file_path}")
-
-    if os.path.exists(file_path):
-        os.remove(file_path)  # remove file
-        st.success(f"✅ Deleted: {filename}")
-        st.warning(
-            "⚠️ A file was deleted, but its data is still in ChromaDB."
-        )
-        time.sleep(3) 
 
 def main():
     load_dotenv()
@@ -262,11 +233,9 @@ def main():
 
                     with col_confirm:
                         if st.button("✅ Yes, Delete", key=f"confirm_{pdf['filename']}"):
-                            print(f"?????????????????????? Deleting {pdf['filename']}...")
                             delete_pdf(pdf["filename"])
                             st.session_state["chroma_reset_needed"] = True
                             st.session_state[delete_confirm_key] = False  # Reset confirmation state
-                            print(f"?????????????????????? DELETED {pdf['filename']}...")
                             st.rerun()  # refresh the UI after deletion
 
                     with col_cancel:
