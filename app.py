@@ -75,7 +75,10 @@ class TogetherLLM(LLM):
             model=self.model_name,
             messages=[{"role": "system", "content": system_instructions},
                       {"role": "user", "content": full_prompt}],
-            max_tokens=1000  # adjust token limit as needed
+            max_tokens=1000,      # limit response length
+            temperature=0.5,       # creativity (Lower = More Deterministic)
+            top_p=0.5,             # nucleus Sampling (Lower = Focused, Higher = Diverse)
+            repetition_penalty=1.1 # penalize repetitive words
         )
 
         return response.choices[0].message.content
