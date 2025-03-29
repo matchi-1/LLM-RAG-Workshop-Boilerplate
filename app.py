@@ -189,9 +189,9 @@ def main():
                         valid_files.append(pdf)
 
                 if valid_files:  # process only valid PDFs
-                    with st.spinner("Processing..."):
-                        for pdf in valid_files:
-                            file_path = os.path.join(DATA_FOLDER, pdf.name)
+                    for pdf in valid_files:
+                        file_path = os.path.join(DATA_FOLDER, pdf.name)
+                        with st.spinner(f"Processing '{pdf.name}'..."):
                             try:
                                 with open(file_path, "wb") as f:
                                     f.write(pdf.read())
@@ -253,7 +253,7 @@ def main():
         st.divider()
         st.markdown(
             '<p style="font-size: 12px; color: grey;">'
-            'Note: If you deleted a file here and have not reset ChromaDB yet, the embeddings still exist but are not visible in the list.'
+            'Note: If you deleted a file here and have not reset ChromaDB yet, the embeddings still exist but are not visible in the list. Terminate the streamlit app and delete the "./chroma_db" folder to reset, then you can  run the app again.'
             '</p>',
             unsafe_allow_html=True
         )
@@ -278,7 +278,7 @@ def main():
             "⚠️ Some deleted PDFs still have embeddings stored in ChromaDB. "
             "To fully reset the knowledge base, follow these steps:\n\n"
             "1️⃣ Click the **Exit Streamlit App** button below to terminate the current session.\n\n"
-            "2️⃣ Open your terminal and **delete the ChromaDB directory** manually:\n\n"
+            "2️⃣ Open your IDE and **delete the `chroma_db` directory** manually:\n\n"
             "3️⃣ Restart the Streamlit app by running:\n"
             "   ```sh\n"
             "   streamlit run app.py\n"

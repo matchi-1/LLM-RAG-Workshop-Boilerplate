@@ -19,7 +19,8 @@ together_api_key = os.getenv("TOGETHER_LLM_API_KEY") # Together api key: get the
 class TogetherEmbeddings(Embeddings):
     """Custom LangChain embedding class using Together AI"""
     
-    def __init__(self, model_name="togethercomputer/m2-bert-80M-32k-retrieval"):
+    def __init__(self, model_name="WhereIsAI/UAE-Large-V1"):
+    #def __init__(self, model_name="BAAI/bge-large-en-v1.5"):
         self.client = Together(api_key=together_api_key)
         self.model_name = model_name
 
