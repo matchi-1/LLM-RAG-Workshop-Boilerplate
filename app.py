@@ -157,6 +157,7 @@ def delete_pdf(filename):
         st.warning(
             "⚠️ A file was deleted, but its data is still in ChromaDB."
         )
+        time.sleep(3) 
 
 def main():
     load_dotenv()
@@ -241,25 +242,38 @@ def main():
                 col1, col2 = st.columns([3, 1])  # table columns
 
                 col1.write(f"{pdf['name']}")  # processed status and PDF name
-                
-                # Delete button with confirmation
+
+                # Store the confirmation state in session_state
+                delete_confirm_key = f"delete_confirm_{pdf['filename']}"
+
+                if delete_confirm_key not in st.session_state:
+                    st.session_state[delete_confirm_key] = False  # Default to no confirmation
+
+                # If confirmation is needed, show a warning and buttons
                 if col2.button("🗑️", key=pdf["filename"]):
+                    # Toggle the confirmation state
+                    st.session_state[delete_confirm_key] = not st.session_state[delete_confirm_key]
+
+                # Handle deletion confirmation and cancellation
+                if st.session_state[delete_confirm_key]:
                     st.warning(f"Are you sure you want to delete **{pdf['filename']}**?")
-                    
-                    # Show confirmation buttons
+
                     col_confirm, col_cancel = st.columns([1, 1])
-                    
+
                     with col_confirm:
                         if st.button("✅ Yes, Delete", key=f"confirm_{pdf['filename']}"):
                             print(f"?????????????????????? Deleting {pdf['filename']}...")
                             delete_pdf(pdf["filename"])
                             st.session_state["chroma_reset_needed"] = True
-                            st.rerun()  # refresh the UI after deletion
+                            st.session_state[delete_confirm_key] = False  # Reset confirmation state
                             print(f"?????????????????????? DELETED {pdf['filename']}...")
+                            st.rerun()  # refresh the UI after deletion
 
                     with col_cancel:
                         if st.button("❌ Cancel", key=f"cancel_{pdf['filename']}"):
+                            st.session_state[delete_confirm_key] = False  # Reset confirmation state
                             st.experimental_rerun()  # Just refresh the UI without deleting
+
         
         st.divider()
         st.markdown(
