@@ -6,87 +6,23 @@ import streamlit as st
 from dotenv import load_dotenv
 #from PyPDF2 import PdfReader
 #from langchain.text_splitter import CharacterTextSplitter
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 #from langchain.embeddings import HuggingFaceInstructEmbeddings     #, OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 #from langchain_huggingface import HuggingFaceEmbeddings    # uncomment to use huggingface
 #from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain 
-from together import Together
 from langchain.llms.base import LLM
-from typing import List, Optional
 from langchain_chroma import Chroma
 
 from ingest import ingest_file, DATA_FOLDER, CHROMA_PATH, TogetherEmbeddings   #   vector_store,    import the the ingest_file method and vector store from ingest.py
 from pdf_utils import list_pdfs, delete_pdf
+from model import TogetherLLM
 
 
 load_dotenv()  # load environment variables from .env file
 together_api_key = os.getenv("TOGETHER_LLM_API_KEY") # Together api key: get the API key from the environment variable
 
-
-class TogetherLLM(LLM):
-    model_name: str = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
-    api_key: str
-
-    def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
-        # define system instructions -- acts as the bot's main instructions and personality
-        system_instructions = """
-        You are James, the fun AI assistant that answers the user based on retrieved document context.
-        You should always be enthusiastic and helpful when replying.
-        
-        If the question is general knowledge and isn't necessarily related to the context, try and answer it still based on facts.
-       
-        
-        """ # you can make this longer and more specific to your use case
-
-        # If you are unsure of the answer, just say 'I don't know based on the given documents.  --- you can also add this
-
-        # retrieve chat history from memory
-        chat_history = "\n".join(
-            [f"{m.content}" for m in st.session_state.chat_history]
-        ) if st.session_state.chat_history else "No previous conversation."
-
-
-        template = """
-        Answer it based on this context:
-        {context}
-
-        This is the chat History:
-        {chat_history}
-
-        This is the current user query:
-        {query}
-
-        Answer:
-        """     # you can also modify this template to change the bot's response style for answering individual queries
-
-        # replace placeholders in the template
-        full_prompt = template.format(
-            context="No relevant context found yet.",  # this will be replaced later
-            chat_history=chat_history,
-            query=prompt
-        )
-
-        # call Together AI's model
-        client = Together(api_key=self.api_key)
-        response = client.chat.completions.create(
-            model=self.model_name,
-            messages=[{"role": "system", "content": system_instructions},
-                      {"role": "user", "content": full_prompt}],
-            max_tokens=1000,      # limit response length
-            temperature=0.5,       # creativity (Lower = More Deterministic)
-            top_p=0.5,             # nucleus Sampling (Lower = Focused, Higher = Diverse)
-            repetition_penalty=1.1 # penalize repetitive words
-        )
-
-        return response.choices[0].message.content
-
-
-    @property
-    def _llm_type(self) -> str:
-        return "together_ai"
 
 
 def get_conversation_chain(vectorstore):
@@ -103,11 +39,15 @@ def get_conversation_chain(vectorstore):
 
     return conversation_chain
 
+
+
 # helper function to stream text output
 def stream_data(text):
     for word in text.split(" "):
         yield word + " "
         time.sleep(0.05)
+
+
 
 def handle_userinput(user_question):
     """Handles user input, gets a response from the chatbot, and updates chat history."""
@@ -134,6 +74,7 @@ def handle_userinput(user_question):
     # Print chat history to terminal
     print("Chat History:")
     print(str(st.session_state.chat_history))
+
 
 
 def main():
@@ -223,18 +164,18 @@ def main():
 
                 col1.write(f"{pdf['name']}")  # processed status and PDF name
 
-                # Store the confirmation state in session_state
+                # store the confirmation state in session_state
                 delete_confirm_key = f"delete_confirm_{pdf['filename']}"
 
                 if delete_confirm_key not in st.session_state:
-                    st.session_state[delete_confirm_key] = False  # Default to no confirmation
+                    st.session_state[delete_confirm_key] = False  # default to no confirmation
 
-                # If confirmation is needed, show a warning and buttons
+                # if confirmation is needed, show a warning and buttons
                 if col2.button("🗑️", key=pdf["filename"]):
-                    # Toggle the confirmation state
+                    # toggle the confirmation state
                     st.session_state[delete_confirm_key] = not st.session_state[delete_confirm_key]
 
-                # Handle deletion confirmation and cancellation
+                # handle deletion confirmation and cancellation
                 if st.session_state[delete_confirm_key]:
                     st.warning(f"Are you sure you want to delete **{pdf['filename']}**?")
 
@@ -244,12 +185,12 @@ def main():
                         if st.button("✅ Yes, Delete", key=f"confirm_{pdf['filename']}"):
                             delete_pdf(pdf["filename"])
                             st.session_state["chroma_reset_needed"] = True
-                            st.session_state[delete_confirm_key] = False  # Reset confirmation state
+                            st.session_state[delete_confirm_key] = False  # reset confirmation state
                             st.rerun()  # refresh the UI after deletion
 
                     with col_cancel:
                         if st.button("❌ Cancel", key=f"cancel_{pdf['filename']}"):
-                            st.session_state[delete_confirm_key] = False  # Reset confirmation state
+                            st.session_state[delete_confirm_key] = False  # reset confirmation state
                             st.rerun() 
 
         
