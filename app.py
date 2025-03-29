@@ -128,6 +128,9 @@ def handle_userinput(user_question):
     # add bot response to chat history
     st.session_state.messages.append({"role": "assistant", "content": bot_reply})
 
+    # Print chat history to terminal
+    print("Chat History:")
+    print(str(st.session_state.chat_history))
 
 
 def main():
@@ -202,6 +205,9 @@ def main():
 
                     time.sleep(2)  # allow success messages to persist
                     st.rerun()  # refresh UI
+
+                else:
+                    st.info("No valid PDFs to process.")
        
         st.divider()
         # display stored PDFs in a table
@@ -241,7 +247,7 @@ def main():
                     with col_cancel:
                         if st.button("❌ Cancel", key=f"cancel_{pdf['filename']}"):
                             st.session_state[delete_confirm_key] = False  # Reset confirmation state
-                            st.experimental_rerun()  # Just refresh the UI without deleting
+                            st.rerun() 
 
         
         st.divider()

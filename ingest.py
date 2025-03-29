@@ -74,7 +74,7 @@ def ingest_file(pdf_path):
     # rename file to mark as processed
     os.rename(pdf_path, os.path.join(DATA_FOLDER, "_" + os.path.basename(pdf_path)))
 
-    print(f"\n\n========= {pdf_path} successfully ingested and stored!")
+    print(f"\n\nYIPEEEEEEEE {pdf_path} successfully ingested and stored!")
 
 
 
