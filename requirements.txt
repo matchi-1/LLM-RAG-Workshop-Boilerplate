@@ -2,21 +2,23 @@ langchain
 PyPDF2
 python-dotenv
 streamlit
-openai
-faiss-cpu  #
 altair
 tiktoken
 langchain-community
 together 
 chromadb
-langchain-huggingface
 langchain-chroma
 pypdf
 keyboard
+psutil
 
+# openai
+# faiss-cpu 
+
+# langchain-huggingface
 #  huggingface llms
-huggingface-hub  #
+# huggingface-hub  #
 
 # instructor embeddings 
-InstructorEmbedding  #
-sentence-transformers  #
+#InstructorEmbedding  #
+#sentence-transformers  #

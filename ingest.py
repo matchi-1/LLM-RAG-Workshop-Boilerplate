@@ -47,6 +47,8 @@ vector_store = Chroma(collection_name = "documents",
 def ingest_file(pdf_path):
     """Ingest a PDF file into ChromaDB"""
     
+
+    print(f"\nExtracting PDF from {pdf_path}...")
     # load PDF
     loader = PyPDFLoader(pdf_path)
     pages = loader.load()
@@ -80,15 +82,15 @@ def ingest_file(pdf_path):
     # rename file to mark as processed
     os.rename(pdf_path, os.path.join(DATA_FOLDER, "_" + os.path.basename(pdf_path)))
 
-    print(f"\n\nYIPEEEEEEEE {pdf_path} successfully ingested and stored!")
+    print(f"\nYIPEEEEEEEE {pdf_path} successfully ingested and stored!")
 
     # Record end time
     end_time = time.time()
-    print(f"Process ended at: {time.ctime(end_time)}")
+    print(f"\n\nProcess ended at: {time.ctime(end_time)}")
 
     # Print the total time taken
     total_time = end_time - start_time
-    print(f"Total time taken: {total_time:.2f} seconds")
+    print(f"\nTotal time taken: {total_time:.2f} seconds\n\n")
 
     return total_time
 
