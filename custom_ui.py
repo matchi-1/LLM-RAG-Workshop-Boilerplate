@@ -43,9 +43,14 @@ def apply_ui_customization():
             background: linear-gradient(to right, #54d0d6, #0094a1)    /* USER DIV  -- gradient teal blue */  
         }
 
+        
+        [data-testid="stChatMessage"]:nth-child(odd) [data-testid="stChatMessageContent"] {     
+            color: #02717a !important;                               /* BOT CHAT FONT COLORS  -- dark teal */ 
+            padding-left: 0.5rem;
+        }
 
-        [data-testid="stChatMessageContent"] {     /* CHAT FONT COLORS  -- dark teal */ 
-            color: #047d87 !important;
+        [data-testid="stChatMessage"]:nth-child(even) [data-testid="stChatMessageContent"] {     
+            color: white !important;                                 /* USER CHAT FONT COLORS  -- white */ 
             padding-left: 0.5rem;
         }
 
