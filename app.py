@@ -4,23 +4,21 @@ import keyboard
 import time
 import streamlit as st
 from dotenv import load_dotenv
-from PyPDF2 import PdfReader
+#from PyPDF2 import PdfReader
 #from langchain.text_splitter import CharacterTextSplitter
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 #from langchain.embeddings import HuggingFaceInstructEmbeddings     #, OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
+#from langchain_huggingface import HuggingFaceEmbeddings    # uncomment to use huggingface
 #from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain, LLMChain, StuffDocumentsChain
+from langchain.chains import ConversationalRetrievalChain 
 from together import Together
 from langchain.llms.base import LLM
 from typing import List, Optional
-import itertools
 from langchain_chroma import Chroma
 
-
-from ingest import ingest_file, DATA_FOLDER, CHROMA_PATH   #   vector_store,    import the the ingest_file method and vector store from ingest.py
+from ingest import ingest_file, DATA_FOLDER, CHROMA_PATH, TogetherEmbeddings   #   vector_store,    import the the ingest_file method and vector store from ingest.py
 import shutil
 
 
@@ -151,6 +149,8 @@ def delete_pdf(filename):
     """Deletes a PDF file, resets ChromaDB, and reprocesses remaining PDFs."""
     file_path = os.path.join(DATA_FOLDER, filename)
 
+    print(f"!!!!!!!!!!!!!!!!! Attempting to delete: {file_path}")
+
     if os.path.exists(file_path):
         os.remove(file_path)  # remove file
         st.success(f"✅ Deleted: {filename}")
@@ -160,17 +160,21 @@ def delete_pdf(filename):
 
 def main():
     load_dotenv()
-    st.set_page_config(page_title="ChatTGP", page_icon="👩🏼‍⚕️")  # chatbot name
+    st.set_page_config(page_title="ChatTGP", page_icon="💊")  # chatbot name
 
     # initialize session state variables
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
-    if "messages" not in st.session_state:
-        st.session_state.messages = []  # store chat messages for UI
     if "chroma_reset_needed" not in st.session_state:
         st.session_state.chroma_reset_needed = False
+
+    # initialize chat history if not already set
+    if "messages" not in st.session_state:
+        st.session_state.messages = [
+            {"role": "assistant", "content": "👋 Hello! How can I assist you today?"}
+        ]
 
     st.header("ChatTGP 👩🏼‍⚕️")
 
@@ -247,13 +251,16 @@ def main():
                     
                     with col_confirm:
                         if st.button("✅ Yes, Delete", key=f"confirm_{pdf['filename']}"):
+                            print(f"?????????????????????? Deleting {pdf['filename']}...")
                             delete_pdf(pdf["filename"])
                             st.session_state["chroma_reset_needed"] = True
                             st.rerun()  # refresh the UI after deletion
+                            print(f"?????????????????????? DELETED {pdf['filename']}...")
 
                     with col_cancel:
                         if st.button("❌ Cancel", key=f"cancel_{pdf['filename']}"):
                             st.experimental_rerun()  # Just refresh the UI without deleting
+        
         st.divider()
         st.markdown(
             '<p style="font-size: 12px; color: grey;">'
@@ -264,7 +271,8 @@ def main():
 
 
     # initialize embeddings
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    #embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    embeddings = TogetherEmbeddings()
 
     # initialize a Chromadb vector store
     vectorstore = Chroma(collection_name = "documents",
